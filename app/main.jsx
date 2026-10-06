@@ -8,12 +8,20 @@ const prompts = [
   'Hast du am … Zeit?',
 ]
 
+const reviewItems = [
+  'Habe ich mich entschuldigt und einen Grund genannt?',
+  'Habe ich einen konkreten neuen Termin vorgeschlagen?',
+  'Habe ich gefragt, ob Mara dann Zeit hat?',
+  'Hat meine Nachricht 30–50 Wörter?',
+]
+
 function CaseBreaker() {
   const [step, setStep] = useState(0)
   const [draft, setDraft] = useState('')
-  const [checks, setChecks] = useState([false, false, false])
+  const [checks, setChecks] = useState(reviewItems.map(() => false))
   const [finished, setFinished] = useState(false)
   const wordCount = draft.trim() ? draft.trim().split(/\s+/u).length : 0
+  const wordCountInRange = wordCount >= 30 && wordCount <= 50
 
   function insertPrompt(prompt) {
     setDraft((current) => `${current}${current && !current.endsWith(' ') ? ' ' : ''}${prompt}`)
@@ -26,7 +34,7 @@ function CaseBreaker() {
   function startAgain() {
     setStep(0)
     setDraft('')
-    setChecks([false, false, false])
+    setChecks(reviewItems.map(() => false))
     setFinished(false)
   }
 
@@ -50,13 +58,13 @@ function CaseBreaker() {
           <p className="rail-caption">Schreiben<br />im Alltag</p>
           <div className="rail-rule" />
           <ol className="step-list" aria-label="Übungsschritte">
-            <li className={step === 0 ? 'step-item current' : step > 0 ? 'step-item done' : 'step-item'}>
+            <li className={step === 0 ? 'step-item current' : step > 0 ? 'step-item done' : 'step-item'} aria-current={step === 0 ? 'step' : undefined}>
               <span className="step-marker">{step > 0 ? '✓' : '01'}</span><span>Fall lesen</span>
             </li>
-            <li className={step === 1 ? 'step-item current' : step > 1 ? 'step-item done' : 'step-item'}>
+            <li className={step === 1 ? 'step-item current' : step > 1 ? 'step-item done' : 'step-item'} aria-current={step === 1 ? 'step' : undefined}>
               <span className="step-marker">{step > 1 ? '✓' : '02'}</span><span>Antwort schreiben</span>
             </li>
-            <li className={step === 2 ? 'step-item current' : finished ? 'step-item done' : 'step-item'}>
+            <li className={step === 2 ? 'step-item current' : finished ? 'step-item done' : 'step-item'} aria-current={step === 2 ? 'step' : undefined}>
               <span className="step-marker">{finished ? '✓' : '03'}</span><span>Selbst prüfen</span>
             </li>
           </ol>
@@ -72,7 +80,7 @@ function CaseBreaker() {
           <div className="case-heading">
             <p className="case-index">FALL 01&nbsp; · &nbsp;EINE NACHRICHT AN MARA</p>
             <h1 id="case-title">Ein neuer<br /><em>Termin.</em></h1>
-            <p className="case-intro">Du kannst am Samstag nicht zum Lerntreffen kommen. Schreib Mara eine kurze Nachricht und findet gemeinsam einen neuen Termin.</p>
+            <p className="case-intro">Du kannst am Samstag nicht zum Lerntreffen kommen. Schreib Mara eine kurze Nachricht. Entschuldige dich, schlage einen neuen Termin vor und frage, ob sie Zeit hat.</p>
           </div>
 
           <div className="case-content">
@@ -99,7 +107,7 @@ function CaseBreaker() {
                 <div className="prompt-chips" aria-label="Satzanfänge einfügen">{prompts.map((prompt) => <button type="button" key={prompt} onClick={() => insertPrompt(prompt)}>{prompt}</button>)}</div>
                 <label className="sr-only" htmlFor="learner-draft">Deine Nachricht an Mara</label>
                 <textarea id="learner-draft" value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Liebe Mara, es tut mir leid, aber …" rows="6" />
-                <div className="writer-footer"><span className={wordCount >= 30 && wordCount <= 50 ? 'word-count good' : 'word-count'}>{wordCount} <span>Wörter</span></span><span>Dein Entwurf bleibt in diesem Fenster.</span></div>
+                <div className="writer-footer"><span className={wordCountInRange ? 'word-count good' : 'word-count'} aria-live="polite">{wordCount} <span>Wörter</span></span><span>Dein Entwurf bleibt in diesem Fenster.</span></div>
                 <div className="button-row"><button className="text-button" onClick={() => setStep(0)} type="button">← Fall ansehen</button><button className="primary-button" onClick={() => setStep(2)} type="button">Selbst prüfen <span aria-hidden="true">→</span></button></div>
               </div>
             )}
@@ -107,13 +115,10 @@ function CaseBreaker() {
             {step === 2 && !finished && (
               <div className="review-block">
                 <div className="review-heading"><span className="brief-label">DEIN CHECK VOR DEM ABSENDEN</span><h2>Lies deine Nachricht noch einmal.</h2><p>Markiere jeden Punkt, den du in deinem Text geprüft hast. Du bekommst hier eine Lernhilfe, keine automatische Deutschnote.</p></div>
-                <div className="review-list">{[
-                  'Habe ich mich entschuldigt und einen Grund genannt?',
-                  'Habe ich einen konkreten neuen Termin vorgeschlagen?',
-                  'Habe ich gefragt, ob Mara dann Zeit hat?',
-                ].map((label, index) => <label className={checks[index] ? 'review-check checked' : 'review-check'} key={label}><input type="checkbox" checked={checks[index]} onChange={() => toggleCheck(index)} /><span className="custom-check" aria-hidden="true">{checks[index] ? '✓' : ''}</span><span>{label}</span></label>)}</div>
+                <div className="review-list">{reviewItems.map((label, index) => <label className={checks[index] ? 'review-check checked' : 'review-check'} key={label}><input type="checkbox" checked={checks[index]} onChange={() => toggleCheck(index)} /><span className="custom-check" aria-hidden="true">{checks[index] ? '✓' : ''}</span><span>{label}</span></label>)}</div>
+                {!wordCountInRange && <p className="word-warning" role="status">Dein Auftrag: 30–50 Wörter. Geh zurück und passe deinen Entwurf an.</p>}
                 <div className="draft-recap"><span className="brief-label">DEIN ENTWURF · {wordCount} WÖRTER</span><p>{draft || 'Du hast noch keinen Entwurf geschrieben. Du kannst zurückgehen und einen ergänzen.'}</p></div>
-                <div className="button-row"><button className="text-button" onClick={() => setStep(1)} type="button">← Entwurf bearbeiten</button><button className="primary-button" onClick={() => setFinished(true)} disabled={!checks.every(Boolean)} type="button">Fall abschließen <span aria-hidden="true">→</span></button></div>
+                <div className="button-row"><button className="text-button" onClick={() => setStep(1)} type="button">← Entwurf bearbeiten</button><button className="primary-button" onClick={() => setFinished(true)} disabled={!checks.every(Boolean) || !wordCountInRange} type="button">Fall abschließen <span aria-hidden="true">→</span></button></div>
               </div>
             )}
 
@@ -123,7 +128,7 @@ function CaseBreaker() {
                 <span className="brief-label">FALL ABGESCHLOSSEN</span>
                 <h2>Gut geprüft.</h2>
                 <p>Du hast deine Nachricht selbst überarbeitet. Genau so wird aus einer Idee ein klarer Text.</p>
-                <div className="finish-stats"><span><strong>{wordCount}</strong> Wörter</span><span><strong>3/3</strong> Punkte geprüft</span></div>
+                <div className="finish-stats"><span><strong>{wordCount}</strong> Wörter</span><span><strong>4/4</strong> Punkte geprüft</span></div>
                 <button className="text-button" onClick={startAgain} type="button">Noch einmal üben ↺</button>
               </div>
             )}
