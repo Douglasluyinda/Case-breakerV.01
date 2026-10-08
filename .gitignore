@@ -1,14 +1,20 @@
 # Dependencies
 node_modules/
+frontend/node_modules/
+backend/node_modules/
 
 # Build output
-dist/
-dist-ssr/
+frontend/dist/
+frontend/dist-ssr/
+backend/dist/
 
 # Environment files — NEVER commit secrets
 .env
 .env.local
 .env.*.local
+backend/.env
+frontend/.env
+frontend/.env.local
 
 # Editor / OS
 .DS_Store
@@ -26,3 +32,6 @@ yarn-error.log*
 
 # EAS / Expo (future)
 .expo/
+
+# TypeScript
+*.tsbuildinfo
