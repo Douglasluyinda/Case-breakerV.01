@@ -128,7 +128,9 @@ export default function CaseBreaker() {
   const [comboAnim,  setComboAnim]  = useState(false);
   const [wrongFlash, setWrongFlash] = useState(false);
   const [bursts,     setBursts]     = useState([]);
-  const [highScore,  setHighScore]  = useState(0);
+  const [highScore,  setHighScore]  = useState(() => {
+    try { return parseInt(localStorage.getItem("cbHighScore") || "0", 10) || 0; } catch { return 0; }
+  });
   const [accuracy,   setAccuracy]   = useState({ NOMI:{c:0,t:0}, AKKU:{c:0,t:0}, DATIV:{c:0,t:0}, GENIT:{c:0,t:0} });
   const [chosenOpt,  setChosenOpt]  = useState(null);
 
@@ -151,7 +153,11 @@ export default function CaseBreaker() {
 
   // ─── Round end → record high score ────────────────────────────────────────
   useEffect(() => {
-    if (phase === "roundend") setHighScore(h => Math.max(h, score));
+    if (phase === "roundend") setHighScore(h => {
+      const next = Math.max(h, score);
+      try { localStorage.setItem("cbHighScore", String(next)); } catch {}
+      return next;
+    });
   }, [phase]);
 
   // ─── Start ────────────────────────────────────────────────────────────────
