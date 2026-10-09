@@ -5,8 +5,10 @@ import jwt from "@fastify/jwt";
 
 import { config } from "./config.js";
 import authPlugin from "./plugins/auth.js";
+import r2Plugin from "./plugins/r2.js";
 import healthRoutes from "./routes/health.js";
 import authRoutes from "./routes/auth.js";
+import productRoutes from "./routes/products.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -32,12 +34,14 @@ export async function buildApp() {
   // ── Auth ────────────────────────────────────────────────────────────────────
   await app.register(jwt, { secret: config.JWT_SECRET });
   await app.register(authPlugin);
+  await app.register(r2Plugin);
 
   // ── Routes ──────────────────────────────────────────────────────────────────
   await app.register(healthRoutes);
 
   // ── Routes ──────────────────────────────────────────────────────────────────
   await app.register(authRoutes,     { prefix: "/auth" });
+  await app.register(productRoutes,  { prefix: "/products" });
 
   // Future route registrations:
   // await app.register(productRoutes,  { prefix: "/products" });

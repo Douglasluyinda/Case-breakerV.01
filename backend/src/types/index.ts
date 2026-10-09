@@ -19,6 +19,32 @@ export interface UserProfile {
   createdAt: string;
 }
 
+// ── Product shapes ─────────────────────────────────────────────────────────────
+export interface Product {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  priceUsd: number;
+  fileType: string | null;
+  fileSizeBytes: number | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface ProductRow {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  price_usd: number;
+  r2_key: string | null;
+  file_type: string | null;
+  file_size_bytes: number | null;
+  is_active: boolean;
+  created_at: string;
+}
+
 // ── Fastify type augmentation ──────────────────────────────────────────────────
 declare module "fastify" {
   interface FastifyRequest {

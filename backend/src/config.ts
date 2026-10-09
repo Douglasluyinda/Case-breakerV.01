@@ -15,6 +15,12 @@ const envSchema = z.object({
   // JWT (must match Supabase JWT secret for token verification)
   JWT_SECRET: z.string().min(32),
 
+  // Cloudflare R2 (S3-compatible)
+  R2_ACCOUNT_ID: z.string().min(1),
+  R2_ACCESS_KEY_ID: z.string().min(1),
+  R2_SECRET_ACCESS_KEY: z.string().min(1),
+  R2_BUCKET: z.string().min(1),
+
   // CORS — comma-separated origins
   CORS_ORIGINS: z
     .string()
