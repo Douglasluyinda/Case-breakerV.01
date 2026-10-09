@@ -21,6 +21,18 @@ const envSchema = z.object({
   R2_SECRET_ACCESS_KEY: z.string().min(1),
   R2_BUCKET: z.string().min(1),
 
+  // Stripe
+  STRIPE_SECRET_KEY: z.string().min(1),
+  STRIPE_WEBHOOK_SECRET: z.string().min(1),
+
+  // Flutterwave
+  FLW_SECRET_KEY: z.string().min(1),
+  FLW_PUBLIC_KEY: z.string().min(1),
+  FLW_WEBHOOK_HASH: z.string().min(1),  // secret hash set in FLW dashboard
+
+  // App public URL (used in payment redirect/callback URLs)
+  APP_URL: z.string().url().default("http://localhost:5173"),
+
   // CORS — comma-separated origins
   CORS_ORIGINS: z
     .string()
