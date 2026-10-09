@@ -6,6 +6,7 @@ import jwt from "@fastify/jwt";
 import { config } from "./config.js";
 import authPlugin from "./plugins/auth.js";
 import healthRoutes from "./routes/health.js";
+import authRoutes from "./routes/auth.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -35,8 +36,10 @@ export async function buildApp() {
   // ── Routes ──────────────────────────────────────────────────────────────────
   await app.register(healthRoutes);
 
-  // Future route registrations go here:
-  // await app.register(authRoutes,     { prefix: "/auth" });
+  // ── Routes ──────────────────────────────────────────────────────────────────
+  await app.register(authRoutes,     { prefix: "/auth" });
+
+  // Future route registrations:
   // await app.register(productRoutes,  { prefix: "/products" });
   // await app.register(orderRoutes,    { prefix: "/orders" });
   // await app.register(entitleRoutes,  { prefix: "/entitlements" });

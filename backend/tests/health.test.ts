@@ -2,12 +2,6 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { buildApp } from "../src/app.js";
 import type { FastifyInstance } from "fastify";
 
-// Minimal env for tests — real Supabase keys not needed for health check
-process.env.NODE_ENV = "test";
-process.env.SUPABASE_URL = "https://placeholder.supabase.co";
-process.env.SUPABASE_ANON_KEY = "placeholder-anon-key";
-process.env.SUPABASE_SERVICE_ROLE_KEY = "placeholder-service-role-key";
-process.env.JWT_SECRET = "test-secret-at-least-32-chars-long!!";
 
 let app: FastifyInstance;
 
