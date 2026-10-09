@@ -45,6 +45,30 @@ export interface ProductRow {
   created_at: string;
 }
 
+// ── Order shapes ───────────────────────────────────────────────────────────────
+export type OrderStatus = "pending" | "completed" | "refunded" | "failed";
+
+export interface OrderRow {
+  id: string;
+  user_id: string;
+  product_id: string;
+  status: OrderStatus;
+  amount_usd: number;
+  payment_provider: string | null;
+  provider_ref: string | null;
+  created_at: string;
+  // joined from products:
+  products?: ProductRow | null;
+}
+
+export interface Purchase {
+  orderId: string;
+  status: OrderStatus;
+  amountUsd: number;
+  purchasedAt: string;
+  product: Product;
+}
+
 // ── Fastify type augmentation ──────────────────────────────────────────────────
 declare module "fastify" {
   interface FastifyRequest {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { products as productsApi } from "../api/client.js";
+import { products as productsApi, purchases as purchasesApi } from "../api/client.js";
 
 // ── Styles ──────────────────────────────────────────────────────────────────────
 const s = {
@@ -140,10 +140,8 @@ export default function DashboardPage() {
   const [loadingPurchases, setLoadingPurchases] = useState(true);
 
   useEffect(() => {
-    // Fetch all products and attempt to get download URLs to determine entitlement.
-    // M07 will add a proper /purchases endpoint; for now we list products and
-    // show download buttons — the backend enforces access on the download route.
-    productsApi.list()
+    // Fetch the user's completed purchases — each entry includes the full product.
+    purchasesApi.list()
       .then((data) => setPurchases(data ?? []))
       .catch(() => setPurchases([]))
       .finally(() => setLoadingPurchases(false));
@@ -181,17 +179,20 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div style={s.grid}>
-            {purchases.map((p) => (
-              <div key={p.id} style={s.card}>
-                {p.fileType && <span style={s.tag}>{p.fileType.split("/")[1]?.toUpperCase() ?? p.fileType}</span>}
-                <div style={s.cardTitle}>{p.title}</div>
-                {p.description && <div style={s.cardDesc}>{p.description}</div>}
-                {fmtSize(p.fileSizeBytes) && (
-                  <div style={s.cardMeta}>{fmtSize(p.fileSizeBytes)}</div>
-                )}
-                <DownloadButton productId={p.id} />
-              </div>
-            ))}
+            {purchases.map((purchase) => {
+              const p = purchase.product;
+              return (
+                <div key={purchase.orderId} style={s.card}>
+                  {p.fileType && <span style={s.tag}>{p.fileType.split("/")[1]?.toUpperCase() ?? p.fileType}</span>}
+                  <div style={s.cardTitle}>{p.title}</div>
+                  {p.description && <div style={s.cardDesc}>{p.description}</div>}
+                  {fmtSize(p.fileSizeBytes) && (
+                    <div style={s.cardMeta}>{fmtSize(p.fileSizeBytes)}</div>
+                  )}
+                  <DownloadButton productId={p.id} />
+                </div>
+              );
+            })}
           </div>
         )}
       </main>

@@ -75,3 +75,11 @@ export const products = {
   get: (id) => request(`/products/${id}`),
   download: (id) => request(`/products/${id}/download`),
 };
+
+// ── Purchases / entitlements ────────────────────────────────────────────────────
+export const purchases = {
+  /** Returns the user's completed purchases with product details. */
+  list: () => request("/purchases"),
+  /** Quick entitlement check for a single product. */
+  entitlement: (productId) => request(`/purchases/${productId}/entitlement`),
+};
