@@ -12,6 +12,7 @@ import DashboardPage from "./pages/DashboardPage.jsx";
 import ProPage from "./pages/ProPage.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
 import AdminGuard from "./components/AdminGuard.jsx";
+import ShopPage from "./pages/ShopPage.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -32,6 +33,9 @@ createRoot(document.getElementById("root")).render(
               </AuthGuard>
             }
           />
+
+          {/* Shop — public product listing */}
+          <Route path="/shop" element={<ShopPage />} />
 
           {/* Pro page — public (shows upgrade CTA) */}
           <Route path="/pro" element={<ProPage />} />
