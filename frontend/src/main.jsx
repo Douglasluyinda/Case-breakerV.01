@@ -10,6 +10,8 @@ import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import ProPage from "./pages/ProPage.jsx";
+import AdminPage from "./pages/AdminPage.jsx";
+import AdminGuard from "./components/AdminGuard.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -33,6 +35,16 @@ createRoot(document.getElementById("root")).render(
 
           {/* Pro page — public (shows upgrade CTA) */}
           <Route path="/pro" element={<ProPage />} />
+
+          {/* Admin — role-gated */}
+          <Route
+            path="/admin"
+            element={
+              <AdminGuard>
+                <AdminPage />
+              </AdminGuard>
+            }
+          />
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />

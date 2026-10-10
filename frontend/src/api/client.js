@@ -84,6 +84,16 @@ export const purchases = {
   entitlement: (productId) => request(`/purchases/${productId}/entitlement`),
 };
 
+// ── Admin ───────────────────────────────────────────────────────────────────────
+export const admin = {
+  stats: () => request("/admin/stats"),
+  products: () => request("/admin/products"),
+  orders: (page = 1) => request(`/admin/orders?page=${page}`),
+  subscriptions: (page = 1) => request(`/admin/subscriptions?page=${page}`),
+  patchProduct: (id, body) => request(`/admin/products/${id}`, { method: "PATCH", body }),
+  patchOrder: (id, body) => request(`/admin/orders/${id}`, { method: "PATCH", body }),
+};
+
 // ── Subscriptions ───────────────────────────────────────────────────────────────
 export const subscriptions = {
   /** Returns the user's active Pro subscription or null. */
