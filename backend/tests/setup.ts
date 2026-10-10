@@ -15,4 +15,5 @@ process.env.STRIPE_WEBHOOK_SECRET = "whsec_test_placeholder";
 process.env.FLW_SECRET_KEY = "FLWSECK_TEST-placeholder";
 process.env.FLW_PUBLIC_KEY = "FLWPUBK_TEST-placeholder";
 process.env.FLW_WEBHOOK_HASH = "flw-webhook-hash-test";
+process.env.STRIPE_PRO_PRICE_ID   ??= "price_test_pro";
 process.env.APP_URL = "http://localhost:5173";

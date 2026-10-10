@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { products as productsApi, purchases as purchasesApi } from "../api/client.js";
+import { products as productsApi, purchases as purchasesApi, subscriptions as subsApi } from "../api/client.js";
 
 // ── Styles ──────────────────────────────────────────────────────────────────────
 const s = {
@@ -46,6 +46,32 @@ const s = {
   heading: { fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.5rem" },
   subheading: { color: "#94a3b8", marginBottom: "2.5rem", fontSize: "0.95rem" },
   sectionTitle: { color: "#94a3b8", fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem" },
+  proBanner: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    background: "linear-gradient(135deg, #1e1b4b, #1e293b)",
+    border: "1px solid #4f46e5",
+    borderRadius: "12px",
+    padding: "1rem 1.5rem",
+    marginBottom: "2rem",
+    gap: "1rem",
+    flexWrap: "wrap",
+  },
+  proBannerText: { color: "#c7d2fe", fontSize: "0.95rem" },
+  proBannerTitle: { color: "#818cf8", fontWeight: 700, marginBottom: "0.2rem" },
+  proUpgradeBtn: {
+    padding: "0.5rem 1.25rem",
+    background: "linear-gradient(135deg, #7c3aed, #2563eb)",
+    border: "none",
+    borderRadius: "8px",
+    color: "#fff",
+    fontWeight: 600,
+    fontSize: "0.875rem",
+    cursor: "pointer",
+    textDecoration: "none",
+    flexShrink: 0,
+  },
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.25rem" },
   card: {
     background: "#1e293b",
@@ -138,14 +164,21 @@ export default function DashboardPage() {
   const { user, logout } = useAuth();
   const [purchases, setPurchases] = useState([]);
   const [loadingPurchases, setLoadingPurchases] = useState(true);
+  const [subscription, setSubscription] = useState(null);
 
   useEffect(() => {
-    // Fetch the user's completed purchases — each entry includes the full product.
+    // Fetch purchases and subscription status in parallel
     purchasesApi.list()
       .then((data) => setPurchases(data ?? []))
       .catch(() => setPurchases([]))
       .finally(() => setLoadingPurchases(false));
+
+    subsApi.me()
+      .then((data) => setSubscription(data?.subscription ?? null))
+      .catch(() => {});
   }, []);
+
+  const isPro = subscription && ["active", "trialing"].includes(subscription.status);
 
   const displayName = user?.displayName ?? user?.email?.split("@")[0] ?? "there";
 
@@ -165,6 +198,31 @@ export default function DashboardPage() {
       <main style={s.main}>
         <h1 style={s.heading}>Welcome back, {displayName}</h1>
         <p style={s.subheading}>Your purchased resources are ready to download.</p>
+
+        {/* ── Subscription banner ── */}
+        {isPro ? (
+          <div style={s.proBanner}>
+            <div>
+              <div style={s.proBannerTitle}>✦ Case Breaker Pro</div>
+              <div style={s.proBannerText}>
+                {subscription.cancelAtPeriodEnd
+                  ? `Active until ${new Date(subscription.currentPeriodEnd).toLocaleDateString()} — renews off`
+                  : "Unlimited drills · AI analysis · CEFR tracking"}
+              </div>
+            </div>
+            <Link to="/pro" style={s.proUpgradeBtn}>Manage Plan</Link>
+          </div>
+        ) : (
+          <div style={s.proBanner}>
+            <div>
+              <div style={s.proBannerTitle}>Upgrade to Pro</div>
+              <div style={s.proBannerText}>
+                Unlock AI mistake analysis, CEFR tracking, and unlimited drills for $9/mo
+              </div>
+            </div>
+            <Link to="/pro" style={s.proUpgradeBtn}>Go Pro →</Link>
+          </div>
+        )}
 
         <div style={s.sectionTitle}>My Downloads</div>
 

@@ -11,6 +11,7 @@ import authRoutes from "./routes/auth.js";
 import productRoutes from "./routes/products.js";
 import purchasesRoutes from "./routes/purchases.js";
 import checkoutRoutes from "./routes/checkout.js";
+import subscriptionRoutes from "./routes/subscriptions.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -45,7 +46,8 @@ export async function buildApp() {
   await app.register(authRoutes,      { prefix: "/auth" });
   await app.register(productRoutes,   { prefix: "/products" });
   await app.register(purchasesRoutes, { prefix: "/purchases" });
-  await app.register(checkoutRoutes,  { prefix: "/checkout" });
+  await app.register(checkoutRoutes,       { prefix: "/checkout" });
+  await app.register(subscriptionRoutes,   { prefix: "/subscriptions" });
 
   // Future route registrations:
   // await app.register(productRoutes,  { prefix: "/products" });

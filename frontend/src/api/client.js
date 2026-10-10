@@ -83,3 +83,13 @@ export const purchases = {
   /** Quick entitlement check for a single product. */
   entitlement: (productId) => request(`/purchases/${productId}/entitlement`),
 };
+
+// ── Subscriptions ───────────────────────────────────────────────────────────────
+export const subscriptions = {
+  /** Returns the user's active Pro subscription or null. */
+  me: () => request("/subscriptions/me"),
+  /** Start a Pro subscription — returns { redirectUrl }. */
+  subscribe: () => request("/subscriptions", { method: "POST" }),
+  /** Cancel the active subscription at period end. */
+  cancel: () => request("/subscriptions/me", { method: "DELETE" }),
+};

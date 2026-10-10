@@ -30,6 +30,9 @@ const envSchema = z.object({
   FLW_PUBLIC_KEY: z.string().min(1),
   FLW_WEBHOOK_HASH: z.string().min(1),  // secret hash set in FLW dashboard
 
+  // Stripe Pro subscription price ID
+  STRIPE_PRO_PRICE_ID: z.string().min(1).default("price_placeholder"),
+
   // App public URL (used in payment redirect/callback URLs)
   APP_URL: z.string().url().default("http://localhost:5173"),
 

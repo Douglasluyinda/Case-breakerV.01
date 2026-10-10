@@ -9,6 +9,7 @@ import CaseBreaker from "./CaseBreaker.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
+import ProPage from "./pages/ProPage.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -29,6 +30,9 @@ createRoot(document.getElementById("root")).render(
               </AuthGuard>
             }
           />
+
+          {/* Pro page — public (shows upgrade CTA) */}
+          <Route path="/pro" element={<ProPage />} />
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />

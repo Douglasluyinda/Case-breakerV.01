@@ -69,6 +69,39 @@ export interface Purchase {
   product: Product;
 }
 
+// ── Subscription shapes ───────────────────────────────────────────────────────
+export type SubscriptionTier = "free" | "pro";
+export type SubscriptionStatus =
+  | "trialing"
+  | "active"
+  | "past_due"
+  | "cancelled"
+  | "unpaid"
+  | "incomplete";
+
+export interface SubscriptionRow {
+  id: string;
+  user_id: string;
+  tier: SubscriptionTier;
+  status: SubscriptionStatus;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  cancelled_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Subscription {
+  id: string;
+  tier: SubscriptionTier;
+  status: SubscriptionStatus;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+}
+
 // ── Fastify type augmentation ──────────────────────────────────────────────────
 declare module "fastify" {
   interface FastifyRequest {
