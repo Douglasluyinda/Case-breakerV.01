@@ -3,6 +3,9 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { products as productsApi, purchases as purchasesApi } from "../api/client.js";
 import * as checkoutApi from "../api/checkout.js";
+import { useReferral } from "../hooks/useReferral.js";
+import { useAnalytics } from "../hooks/useAnalytics.js";
+import LeadMagnetCapture from "../components/LeadMagnetCapture.jsx";
 
 // ── Styles ──────────────────────────────────────────────────────────────────────
 const s = {
@@ -211,6 +214,8 @@ const s = {
 function BuyButton({ product, owned, onSuccess }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const ref = useReferral();
+  const { track } = useAnalytics();
   const [busy, setBusy] = useState(false);
   const [provider] = useState("stripe"); // default; could offer choice
 
@@ -219,8 +224,9 @@ function BuyButton({ product, owned, onSuccess }) {
   async function handleBuy() {
     if (!user) { navigate("/login?next=/shop"); return; }
     setBusy(true);
+    track("Buy clicked", { props: { product: product.title, ref: ref ?? "direct" } });
     try {
-      const { redirectUrl } = await checkoutApi.initiate(product.id, provider);
+      const { redirectUrl } = await checkoutApi.initiate(product.id, provider, ref);
       window.location.href = redirectUrl;
     } catch (e) {
       alert(e.message ?? "Could not start checkout");
@@ -365,6 +371,11 @@ export default function ShopPage() {
             ))}
           </div>
         )}
+
+        {/* ── Lead magnet / free resource capture ── */}
+        <div style={{ margin: "0 0 3rem" }}>
+          <LeadMagnetCapture source="shop-page" />
+        </div>
 
         {/* ── Pro upsell banner ── */}
         <div style={s.proBanner}>

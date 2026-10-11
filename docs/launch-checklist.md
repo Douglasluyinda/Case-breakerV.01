@@ -13,6 +13,7 @@ Work through this list top-to-bottom on launch day. Each section is ordered so l
   - `docs/migrations/002_products.sql`
   - `docs/migrations/003_orders.sql`
   - `docs/migrations/004_subscriptions.sql`
+  - `docs/migrations/005_leads.sql`
 - [ ] Enable Row Level Security on every table
 - [ ] RLS policy — `profiles`: users read/write own row only
 - [ ] RLS policy — `orders`: users read own orders; service role writes

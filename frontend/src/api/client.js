@@ -94,12 +94,29 @@ export const admin = {
   patchOrder: (id, body) => request(`/admin/orders/${id}`, { method: "PATCH", body }),
 };
 
+// ── Leads / email capture ───────────────────────────────────────────────────────
+export const leads = {
+  /**
+   * Subscribe an email address to the lead-magnet list.
+   * @param {string} email
+   * @param {string|null} ref  — affiliate/referral code
+   * @param {string} [source]  — e.g. "shop-banner", "pro-page"
+   */
+  subscribe: (email, ref = null, source = "site") =>
+    request("/leads", { method: "POST", body: { email, ref, source } }),
+};
+
 // ── Subscriptions ───────────────────────────────────────────────────────────────
 export const subscriptions = {
   /** Returns the user's active Pro subscription or null. */
   me: () => request("/subscriptions/me"),
-  /** Start a Pro subscription — returns { redirectUrl }. */
-  subscribe: () => request("/subscriptions", { method: "POST" }),
+  /** Start a Pro subscription — returns { redirectUrl }.
+   * @param {string|null} ref  affiliate/referral code from useReferral()
+   */
+  subscribe: (ref = null) => {
+    const body = ref ? { ref } : {};
+    return request("/subscriptions", { method: "POST", body });
+  },
   /** Cancel the active subscription at period end. */
   cancel: () => request("/subscriptions/me", { method: "DELETE" }),
 };

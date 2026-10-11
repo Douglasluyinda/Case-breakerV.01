@@ -2,6 +2,12 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { subscriptions as subsApi } from "../api/client.js";
+import { useReferral } from "../hooks/useReferral.js";
+import { useAnalytics } from "../hooks/useAnalytics.js";
+
+const SHOW_ANNUAL = import.meta.env.VITE_SHOW_ANNUAL_PRICE === "true";
+const MONTHLY_PRICE = 9;
+const ANNUAL_PRICE  = 79; // ~27% saving
 
 // ── Styles ──────────────────────────────────────────────────────────────────────
 const s = {
@@ -55,6 +61,35 @@ const s = {
   price: { fontSize: "3rem", fontWeight: 800, color: "#fff", lineHeight: 1 },
   pricePer: { color: "#64748b", fontSize: "1rem", paddingBottom: "0.5rem" },
   priceNote: { color: "#64748b", fontSize: "0.85rem", marginBottom: "2rem" },
+
+  // Annual toggle
+  billingToggle: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.75rem",
+    marginBottom: "1.5rem",
+    fontSize: "0.9rem",
+    color: "#94a3b8",
+  },
+  toggleBtn: (active) => ({
+    padding: "0.35rem 0.9rem",
+    borderRadius: "999px",
+    border: "1px solid",
+    borderColor: active ? "#4f46e5" : "#334155",
+    background: active ? "rgba(79,70,229,0.15)" : "transparent",
+    color: active ? "#a5b4fc" : "#64748b",
+    fontWeight: 600,
+    fontSize: "0.8rem",
+    cursor: "pointer",
+  }),
+  saveBadge: {
+    background: "#14532d",
+    color: "#86efac",
+    borderRadius: "999px",
+    padding: "0.2rem 0.6rem",
+    fontSize: "0.75rem",
+    fontWeight: 700,
+  },
 
   featureList: { listStyle: "none", padding: 0, margin: "0 0 2rem 0" },
   featureItem: {
@@ -150,13 +185,21 @@ export default function ProPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const ref = useReferral();
+  const { track } = useAnalytics();
 
   const [subscription, setSubscription] = useState(null);
   const [loadingSub, setLoadingSub] = useState(!!user);
   const [upgrading, setUpgrading] = useState(false);
   const [error, setError] = useState("");
+  const [annual, setAnnual] = useState(false);
 
   const returnStatus = searchParams.get("subscription"); // "success" | "cancelled"
+  const displayPrice = annual ? ANNUAL_PRICE : MONTHLY_PRICE;
+  const displayPer   = annual ? "/year" : "/month";
+  const displayNote  = annual
+    ? `Billed $${ANNUAL_PRICE}/year — save $${(MONTHLY_PRICE * 12 - ANNUAL_PRICE)} vs monthly`
+    : "Cancel any time. No contracts.";
 
   useEffect(() => {
     if (!user) return;
@@ -170,8 +213,9 @@ export default function ProPage() {
     if (!user) { navigate("/login?next=/pro"); return; }
     setUpgrading(true);
     setError("");
+    track("Upgrade clicked", { props: { plan: annual ? "annual" : "monthly", ref: ref ?? "direct" } });
     try {
-      const { redirectUrl } = await subsApi.subscribe();
+      const { redirectUrl } = await subsApi.subscribe(ref);
       window.location.href = redirectUrl;
     } catch (e) {
       setError(e.message ?? "Something went wrong. Please try again.");
@@ -241,11 +285,32 @@ export default function ProPage() {
         ) : (
           /* ── Pricing card ── */
           <div style={s.card}>
+            {/* Annual / Monthly toggle — only shown when feature flag is on */}
+            {SHOW_ANNUAL && (
+              <div style={s.billingToggle}>
+                <button
+                  style={s.toggleBtn(!annual)}
+                  onClick={() => setAnnual(false)}
+                  type="button"
+                >
+                  Monthly
+                </button>
+                <button
+                  style={s.toggleBtn(annual)}
+                  onClick={() => setAnnual(true)}
+                  type="button"
+                >
+                  Annual
+                </button>
+                {annual && <span style={s.saveBadge}>Save 27%</span>}
+              </div>
+            )}
+
             <div style={s.priceRow}>
-              <span style={s.price}>$9</span>
-              <span style={s.pricePer}>/month</span>
+              <span style={s.price}>${displayPrice}</span>
+              <span style={s.pricePer}>{displayPer}</span>
             </div>
-            <div style={s.priceNote}>Cancel any time. No contracts.</div>
+            <div style={s.priceNote}>{displayNote}</div>
 
             <ul style={s.featureList}>
               {PRO_FEATURES.map((f) => (

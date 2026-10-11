@@ -77,6 +77,22 @@ check "GET /subscriptions/me requires auth" "$BASE_URL/subscriptions/me"   401
 check "GET /admin/stats requires auth"      "$BASE_URL/admin/stats"        401
 
 echo ""
+echo "  ${YELLOW}► Leads (public)${NC}"
+# POST with a test address — expects 200 { ok: true }
+LEADS_BODY='{"email":"smoke-test@example.com","source":"smoke-test"}'
+LEADS_RESP=$(curl -s -o /tmp/smoke_leads -w "%{http_code}" -X POST \
+  -H "Content-Type: application/json" -d "$LEADS_BODY" \
+  "$BASE_URL/leads" --max-time 10 2>/dev/null || echo "000")
+LEADS_DATA=$(cat /tmp/smoke_leads 2>/dev/null || echo "")
+if [[ "$LEADS_RESP" == "200" && "$LEADS_DATA" == *'"ok":true'* ]]; then
+  printf "  ${GREEN}✓${NC} %-45s HTTP %s\n" "POST /leads captures email" "$LEADS_RESP"
+  ((PASS++))
+else
+  printf "  ${RED}✗${NC} %-45s HTTP %s (expected 200)\n" "POST /leads captures email" "$LEADS_RESP"
+  ((FAIL++))
+fi
+
+echo ""
 echo "  ─────────────────────────────────────────────────────"
 printf "  Results: ${GREEN}%d passed${NC}" "$PASS"
 if [[ $FAIL -gt 0 ]]; then

@@ -26,7 +26,12 @@ async function post(path, body) {
 /**
  * Initiate a one-time product checkout.
  * Returns { redirectUrl } — caller should redirect window.location.href there.
+ * @param {string} productId
+ * @param {"stripe"|"flutterwave"} provider
+ * @param {string|null} ref  — affiliate/referral code from useReferral()
  */
-export function initiate(productId, provider = "stripe") {
-  return post("/checkout", { productId, provider });
+export function initiate(productId, provider = "stripe", ref = null) {
+  const body = { productId, provider };
+  if (ref) body.ref = ref;
+  return post("/checkout", body);
 }

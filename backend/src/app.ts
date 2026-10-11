@@ -15,6 +15,7 @@ import purchasesRoutes from "./routes/purchases.js";
 import checkoutRoutes from "./routes/checkout.js";
 import subscriptionRoutes from "./routes/subscriptions.js";
 import adminRoutes from "./routes/admin.js";
+import leadsRoutes from "./routes/leads.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -60,6 +61,7 @@ export async function buildApp() {
         { name: "subscriptions", description: "Case Breaker Pro recurring billing" },
         { name: "admin",         description: "Admin-only management endpoints" },
         { name: "health",        description: "Service health" },
+        { name: "leads",         description: "Email capture for free lead-magnet funnel" },
       ],
     },
   });
@@ -92,6 +94,7 @@ export async function buildApp() {
   await app.register(checkoutRoutes,       { prefix: "/checkout" });
   await app.register(subscriptionRoutes,   { prefix: "/subscriptions" });
   await app.register(adminRoutes,          { prefix: "/admin" });
+  await app.register(leadsRoutes,          { prefix: "/leads" });
 
   // Future route registrations:
   // await app.register(productRoutes,  { prefix: "/products" });
