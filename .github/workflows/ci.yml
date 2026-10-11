@@ -70,3 +70,15 @@ jobs:
           SUPABASE_ANON_KEY: placeholder-anon-key
           SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
           JWT_SECRET: ci-test-secret-at-least-32-chars-long!!
+          R2_ACCOUNT_ID: placeholder-r2-account
+          R2_ACCESS_KEY_ID: placeholder-r2-key-id
+          R2_SECRET_ACCESS_KEY: placeholder-r2-secret
+          R2_BUCKET: placeholder-bucket
+          STRIPE_SECRET_KEY: sk_test_placeholder
+          STRIPE_WEBHOOK_SECRET: whsec_placeholder
+          STRIPE_PRO_PRICE_ID: price_placeholder
+          FLW_PUBLIC_KEY: FLWPUBK_TEST-placeholder
+          FLW_SECRET_KEY: FLWSECK_TEST-placeholder
+          FLW_WEBHOOK_HASH: placeholder-flw-hash
+          APP_URL: http://localhost:5173
+          CORS_ORIGINS: http://localhost:5173
