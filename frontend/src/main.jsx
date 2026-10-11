@@ -14,10 +14,14 @@ import AdminPage from "./pages/AdminPage.jsx";
 import AdminGuard from "./components/AdminGuard.jsx";
 import ShopPage from "./pages/ShopPage.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
+import InstallPrompt from "./components/InstallPrompt.jsx";
+import OfflineBanner from "./components/OfflineBanner.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ErrorBoundary>
+    <OfflineBanner />
+    <InstallPrompt />
     <BrowserRouter>
       <AuthProvider>
         <Routes>
