@@ -39,7 +39,7 @@ function toUserProfile(
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
   // ── POST /auth/register ──────────────────────────────────────────────────────
-  fastify.post("/register", async (request, reply) => {
+  fastify.post("/register", { schema: { tags: ["auth"], summary: "Register a new account" } }, async (request, reply) => {
     const parse = registerSchema.safeParse(request.body);
     if (!parse.success) {
       return reply.code(400).send({
@@ -91,7 +91,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // ── POST /auth/login ─────────────────────────────────────────────────────────
-  fastify.post("/login", async (request, reply) => {
+  fastify.post("/login", { schema: { tags: ["auth"], summary: "Login and receive JWT tokens" } }, async (request, reply) => {
     const parse = loginSchema.safeParse(request.body);
     if (!parse.success) {
       return reply.code(400).send({ error: "Validation failed" });
@@ -125,7 +125,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   // ── POST /auth/logout ────────────────────────────────────────────────────────
   fastify.post(
     "/logout",
-    { onRequest: [fastify.authenticate] },
+    { onRequest: [fastify.authenticate], schema: { tags: ["auth"], summary: "Logout (revoke Supabase session)", security: [{ bearerAuth: [] }] } },
     async (request, reply) => {
       // Sign out the user on the Supabase side using their access token
       const token = request.headers.authorization?.replace("Bearer ", "") ?? "";
@@ -144,7 +144,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   // ── GET /auth/me ─────────────────────────────────────────────────────────────
   fastify.get(
     "/me",
-    { onRequest: [fastify.authenticate] },
+    { onRequest: [fastify.authenticate], schema: { tags: ["auth"], summary: "Get current user profile", security: [{ bearerAuth: [] }] } },
     async (request, reply) => {
       const userId = request.user!.sub;
       const email = request.user!.email;

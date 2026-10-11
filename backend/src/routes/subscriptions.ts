@@ -25,7 +25,7 @@ const subscriptionRoutes: FastifyPluginAsync = async (fastify) => {
   // ── GET /subscriptions/me — current subscription ────────────────────────────
   fastify.get(
     "/me",
-    { onRequest: [fastify.authenticate] },
+    { onRequest: [fastify.authenticate], schema: { tags: ["subscriptions"], summary: "Get current user's active subscription", security: [{ bearerAuth: [] }] } },
     async (request, reply) => {
       const userId = request.user.sub;
 
@@ -54,7 +54,7 @@ const subscriptionRoutes: FastifyPluginAsync = async (fastify) => {
   // ── POST /subscriptions — start a Pro subscription checkout ─────────────────
   fastify.post(
     "/",
-    { onRequest: [fastify.authenticate] },
+    { onRequest: [fastify.authenticate], schema: { tags: ["subscriptions"], summary: "Start a Pro subscription checkout", security: [{ bearerAuth: [] }] } },
     async (request, reply) => {
       const userId = request.user.sub;
       const userEmail = request.user.email;
@@ -84,7 +84,7 @@ const subscriptionRoutes: FastifyPluginAsync = async (fastify) => {
   // ── DELETE /subscriptions/me — cancel at period end ─────────────────────────
   fastify.delete(
     "/me",
-    { onRequest: [fastify.authenticate] },
+    { onRequest: [fastify.authenticate], schema: { tags: ["subscriptions"], summary: "Cancel subscription at period end", security: [{ bearerAuth: [] }] } },
     async (request, reply) => {
       const userId = request.user.sub;
 
@@ -117,7 +117,7 @@ const subscriptionRoutes: FastifyPluginAsync = async (fastify) => {
   // ── POST /subscriptions/stripe/webhook ───────────────────────────────────────
   fastify.post(
     "/stripe/webhook",
-    { config: { rawBody: true } },
+    { config: { rawBody: true }, schema: { tags: ["subscriptions"], summary: "Stripe subscription webhook (internal)" } },
     async (request, reply) => {
       const sig = request.headers["stripe-signature"];
       if (!sig || typeof sig !== "string") {

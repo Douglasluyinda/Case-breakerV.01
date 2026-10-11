@@ -2,6 +2,8 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import jwt from "@fastify/jwt";
+import swagger from "@fastify/swagger";
+import swaggerUi from "@fastify/swagger-ui";
 
 import { config } from "./config.js";
 import authPlugin from "./plugins/auth.js";
@@ -26,6 +28,46 @@ export async function buildApp() {
                 ? { target: "pino-pretty", options: { colorize: true } }
                 : undefined,
           },
+  });
+
+  // ── OpenAPI ─────────────────────────────────────────────────────────────────
+  await app.register(swagger, {
+    openapi: {
+      openapi: "3.0.3",
+      info: {
+        title: "Case Breaker API",
+        description: "DeutschwithDoug × Case Breaker — backend API for auth, products, purchases, subscriptions, checkout and admin.",
+        version: "0.1.0",
+      },
+      servers: [
+        { url: config.APP_URL.replace(/\/$/, ""), description: "Deployed" },
+        { url: "http://localhost:4000", description: "Local dev" },
+      ],
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: "http",
+            scheme: "bearer",
+            bearerFormat: "JWT",
+          },
+        },
+      },
+      tags: [
+        { name: "auth",          description: "Registration and login" },
+        { name: "products",      description: "Downloadable grammar resources" },
+        { name: "purchases",     description: "User purchase history and download URLs" },
+        { name: "checkout",      description: "One-time payment sessions (Stripe / Flutterwave)" },
+        { name: "subscriptions", description: "Case Breaker Pro recurring billing" },
+        { name: "admin",         description: "Admin-only management endpoints" },
+        { name: "health",        description: "Service health" },
+      ],
+    },
+  });
+
+  await app.register(swaggerUi, {
+    routePrefix: "/docs",
+    uiConfig: { docExpansion: "list", deepLinking: true },
+    staticCSP: true,
   });
 
   // ── Security ────────────────────────────────────────────────────────────────

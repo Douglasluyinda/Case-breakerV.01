@@ -58,7 +58,7 @@ function toProduct(row: ProductRow): Product {
 const productRoutes: FastifyPluginAsync = async (fastify) => {
   // ── GET /products ────────────────────────────────────────────────────────────
   // Public — returns all active products (no file keys exposed)
-  fastify.get("/", async (_request, reply) => {
+  fastify.get("/", { schema: { tags: ["products"], summary: "List all active products" } }, async (_request, reply) => {
     const { data, error } = await supabase
       .from("products")
       .select("id, slug, title, description, price_usd, file_type, file_size_bytes, is_active, created_at")
@@ -74,7 +74,7 @@ const productRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // ── GET /products/:id ────────────────────────────────────────────────────────
-  fastify.get<{ Params: { id: string } }>("/:id", async (request, reply) => {
+  fastify.get<{ Params: { id: string } }>("/:id", { schema: { tags: ["products"], summary: "Get a single product" } }, async (request, reply) => {
     const { id } = request.params;
 
     const { data, error } = await supabase
@@ -94,7 +94,7 @@ const productRoutes: FastifyPluginAsync = async (fastify) => {
   // ── POST /products — admin only ───────────────────────────────────────────────
   fastify.post(
     "/",
-    { onRequest: [fastify.authenticate] },
+    { onRequest: [fastify.authenticate], schema: { tags: ["products"], summary: "Create a product (admin)", security: [{ bearerAuth: [] }] } },
     async (request, reply) => {
       // TODO: replace with proper role check once admin role is implemented
       const role = (request.user as { role?: string }).role;
@@ -249,7 +249,7 @@ const productRoutes: FastifyPluginAsync = async (fastify) => {
   // ── GET /products/:id/download — authenticated purchasers ─────────────────────
   fastify.get<{ Params: { id: string } }>(
     "/:id/download",
-    { onRequest: [fastify.authenticate] },
+    { onRequest: [fastify.authenticate], schema: { tags: ["products"], summary: "Get a presigned download URL (must own product)", security: [{ bearerAuth: [] }] } },
     async (request, reply) => {
       const { id } = request.params;
       const userId = request.user.sub;

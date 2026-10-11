@@ -30,7 +30,7 @@ const purchasesRoutes: FastifyPluginAsync = async (fastify) => {
   // Returns the authenticated user's completed purchases with product details.
   fastify.get(
     "/",
-    { onRequest: [fastify.authenticate] },
+    { onRequest: [fastify.authenticate], schema: { tags: ["purchases"], summary: "List the current user's completed purchases", security: [{ bearerAuth: [] }] } },
     async (request, reply) => {
       const userId = request.user.sub;
 

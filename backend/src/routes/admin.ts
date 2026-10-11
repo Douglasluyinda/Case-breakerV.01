@@ -18,7 +18,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // ── GET /admin/stats — dashboard KPIs ───────────────────────────────────────
-  fastify.get("/stats", async (_request, reply) => {
+  fastify.get("/stats", { schema: { tags: ["admin"], summary: "Dashboard KPIs", security: [{ bearerAuth: [] }] } }, async (_request, reply) => {
     const [productsRes, ordersRes, subsRes, revenueRes] = await Promise.all([
       supabase.from("products").select("id, is_active", { count: "exact" }),
       supabase.from("orders").select("id, status", { count: "exact" }),
@@ -60,7 +60,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // ── GET /admin/products — full product list (includes inactive) ──────────────
-  fastify.get("/products", async (_request, reply) => {
+  fastify.get("/products", { schema: { tags: ["admin"], summary: "List all products including inactive", security: [{ bearerAuth: [] }] } }, async (_request, reply) => {
     const { data, error } = await supabase
       .from("products")
       .select("id, slug, title, price_usd, file_type, file_size_bytes, is_active, created_at")
@@ -77,6 +77,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   // ── GET /admin/orders — all orders with user email + product title ───────────
   fastify.get(
     "/orders",
+    { schema: { tags: ["admin"], summary: "List all orders (paginated)", security: [{ bearerAuth: [] }] } },
     async (request, reply) => {
       const page = Number((request.query as { page?: string }).page ?? 1);
       const limit = 50;
@@ -103,6 +104,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   // ── GET /admin/subscriptions — active subscriptions ─────────────────────────
   fastify.get(
     "/subscriptions",
+    { schema: { tags: ["admin"], summary: "List all subscriptions (paginated)", security: [{ bearerAuth: [] }] } },
     async (request, reply) => {
       const page = Number((request.query as { page?: string }).page ?? 1);
       const limit = 50;
@@ -132,6 +134,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   // ── PATCH /admin/products/:id — toggle active, update price ─────────────────
   fastify.patch<{ Params: { id: string } }>(
     "/products/:id",
+    { schema: { tags: ["admin"], summary: "Toggle product active / update price", security: [{ bearerAuth: [] }] } },
     async (request, reply) => {
       const { id } = request.params;
       const body = request.body as Partial<Pick<ProductRow, "is_active" | "price_usd">>;
@@ -161,6 +164,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   // ── PATCH /admin/orders/:id — manual status override (e.g. refund) ──────────
   fastify.patch<{ Params: { id: string } }>(
     "/orders/:id",
+    { schema: { tags: ["admin"], summary: "Manual order status override", security: [{ bearerAuth: [] }] } },
     async (request, reply) => {
       const { id } = request.params;
       const { status } = request.body as { status?: string };

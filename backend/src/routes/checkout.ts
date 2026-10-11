@@ -43,7 +43,7 @@ const checkoutRoutes: FastifyPluginAsync = async (fastify) => {
   // Authenticated. Creates a pending order row then redirects to provider.
   fastify.post(
     "/",
-    { onRequest: [fastify.authenticate] },
+    { onRequest: [fastify.authenticate], schema: { tags: ["checkout"], summary: "Initiate a one-time product checkout session", security: [{ bearerAuth: [] }] } },
     async (request, reply) => {
       const parse = initiateSchema.safeParse(request.body);
       if (!parse.success) {
@@ -139,6 +139,7 @@ const checkoutRoutes: FastifyPluginAsync = async (fastify) => {
     "/stripe/webhook",
     {
       config: { rawBody: true },
+      schema: { tags: ["checkout"], summary: "Stripe checkout webhook (internal)" },
     },
     async (request, reply) => {
       const sig = request.headers["stripe-signature"];
@@ -166,7 +167,7 @@ const checkoutRoutes: FastifyPluginAsync = async (fastify) => {
   );
 
   // ── POST /checkout/flutterwave/webhook ────────────────────────────────────────
-  fastify.post("/flutterwave/webhook", async (request, reply) => {
+  fastify.post("/flutterwave/webhook", { schema: { tags: ["checkout"], summary: "Flutterwave checkout webhook (internal)" } }, async (request, reply) => {
     const hash = request.headers["verif-hash"];
     if (!hash || typeof hash !== "string" || !verifyFlutterwaveWebhook(hash)) {
       return reply.code(401).send({ error: "Unauthorised" });
@@ -188,6 +189,7 @@ const checkoutRoutes: FastifyPluginAsync = async (fastify) => {
   // Flutterwave redirect-back URL after payment. Verify transaction then redirect.
   fastify.get<{ Querystring: { transaction_id?: string; tx_ref?: string; status?: string } }>(
     "/flutterwave/callback",
+    { schema: { tags: ["checkout"], summary: "Flutterwave redirect-back callback" } },
     async (request, reply) => {
       const { status, transaction_id } = request.query;
 
