@@ -13,9 +13,11 @@ import ProPage from "./pages/ProPage.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
 import AdminGuard from "./components/AdminGuard.jsx";
 import ShopPage from "./pages/ShopPage.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
+    <ErrorBoundary>
     <BrowserRouter>
       <AuthProvider>
         <Routes>
@@ -55,5 +57,6 @@ createRoot(document.getElementById("root")).render(
         </Routes>
       </AuthProvider>
     </BrowserRouter>
+    </ErrorBoundary>
   </StrictMode>
 );

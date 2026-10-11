@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { products as productsApi, purchases as purchasesApi, subscriptions as subsApi } from "../api/client.js";
 
@@ -107,6 +107,11 @@ const s = {
   emptyTitle: { fontSize: "1.1rem", fontWeight: 600, marginBottom: "0.5rem", color: "#94a3b8" },
   shopLink: { color: "#60a5fa", textDecoration: "none" },
   errorBadge: { color: "#f87171", fontSize: "0.8rem", marginTop: "0.5rem" },
+  paymentSuccess: {
+    background: "#14532d", border: "1px solid #16a34a",
+    borderRadius: "10px", padding: "0.85rem 1.25rem",
+    color: "#86efac", fontSize: "0.9rem", marginBottom: "1.5rem",
+  },
   tag: {
     display: "inline-block",
     padding: "0.2rem 0.6rem",
@@ -162,6 +167,8 @@ function fmtSize(bytes) {
 // ── Main page ───────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { user, logout } = useAuth();
+  const [searchParams] = useSearchParams();
+  const paymentStatus = searchParams.get("payment"); // "success"
   const [purchases, setPurchases] = useState([]);
   const [loadingPurchases, setLoadingPurchases] = useState(true);
   const [subscription, setSubscription] = useState(null);
@@ -198,6 +205,12 @@ export default function DashboardPage() {
       <main style={s.main}>
         <h1 style={s.heading}>Welcome back, {displayName}</h1>
         <p style={s.subheading}>Your purchased resources are ready to download.</p>
+
+        {paymentStatus === "success" && (
+          <div style={s.paymentSuccess}>
+            🎉 Payment confirmed! Your download is ready below.
+          </div>
+        )}
 
         {/* ── Subscription banner ── */}
         {isPro ? (

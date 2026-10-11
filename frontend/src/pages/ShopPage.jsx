@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { products as productsApi, purchases as purchasesApi } from "../api/client.js";
 import * as checkoutApi from "../api/checkout.js";
@@ -192,6 +192,13 @@ const s = {
     color: "#64748b",
   },
 
+  // Payment return banners
+  cancelBanner: {
+    background: "#1e293b", border: "1px solid #334155",
+    borderRadius: "10px", padding: "0.85rem 1.25rem",
+    color: "#94a3b8", marginBottom: "1.5rem", fontSize: "0.9rem",
+  },
+
   // Error
   errBanner: {
     background: "#450a0a", border: "1px solid #b91c1c",
@@ -262,6 +269,8 @@ function ProductCard({ product, owned }) {
 // ── Main page ───────────────────────────────────────────────────────────────────
 export default function ShopPage() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const paymentStatus = searchParams.get("payment"); // "cancelled"
   const [products, setProducts] = useState([]);
   const [ownedIds, setOwnedIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
@@ -322,6 +331,9 @@ export default function ShopPage() {
 
       {/* ── Products ── */}
       <main style={s.main}>
+        {paymentStatus === "cancelled" && (
+          <div style={s.cancelBanner}>No worries — you can buy any time.</div>
+        )}
         {err && <div style={s.errBanner}>{err}</div>}
 
         <div style={s.sectionHeader}>
