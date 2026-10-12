@@ -21,9 +21,9 @@ const envSchema = z.object({
   R2_SECRET_ACCESS_KEY: z.string().default("placeholder"),
   R2_BUCKET: z.string().default("case-breaker"),
 
-  // Stripe
-  STRIPE_SECRET_KEY: z.string().min(1),
-  STRIPE_WEBHOOK_SECRET: z.string().min(1),
+  // Stripe — optional until Stripe billing is enabled
+  STRIPE_SECRET_KEY: z.string().default("sk_placeholder"),
+  STRIPE_WEBHOOK_SECRET: z.string().default("whsec_placeholder"),
 
   // Jjuma Global Pay
   JJUMA_API_KEY: z.string().min(1),
