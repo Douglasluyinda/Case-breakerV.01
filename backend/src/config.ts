@@ -25,10 +25,9 @@ const envSchema = z.object({
   STRIPE_SECRET_KEY: z.string().min(1),
   STRIPE_WEBHOOK_SECRET: z.string().min(1),
 
-  // Flutterwave
-  FLW_SECRET_KEY: z.string().min(1),
-  FLW_PUBLIC_KEY: z.string().min(1),
-  FLW_WEBHOOK_HASH: z.string().min(1),  // secret hash set in FLW dashboard
+  // Jjuma Global Pay
+  JJUMA_API_KEY: z.string().min(1),
+  JJUMA_WEBHOOK_SECRET: z.string().min(1).default("jjuma_webhook_secret"),
 
   // Stripe Pro subscription price ID
   STRIPE_PRO_PRICE_ID: z.string().min(1).default("price_placeholder"),

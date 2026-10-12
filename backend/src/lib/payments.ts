@@ -8,8 +8,6 @@
  */
 
 import Stripe from "stripe";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import Flutterwave = require("flutterwave-node-v3");
 import { config } from "../config.js";
 
 // ── Provider clients (lazily constructed so tests can skip them) ───────────────
@@ -19,14 +17,8 @@ function getStripe(): Stripe {
   return _stripe;
 }
 
-let _flw: InstanceType<typeof Flutterwave> | null = null;
-function getFlw(): InstanceType<typeof Flutterwave> {
-  if (!_flw) _flw = new Flutterwave(config.FLW_PUBLIC_KEY, config.FLW_SECRET_KEY);
-  return _flw;
-}
-
 // ── Shared types ───────────────────────────────────────────────────────────────
-export type PaymentProvider = "stripe" | "flutterwave";
+export type PaymentProvider = "stripe" | "jjuma";
 
 export interface CheckoutParams {
   provider: PaymentProvider;
@@ -101,65 +93,90 @@ export function parseStripeEvent(event: Stripe.Event): PaymentResult | null {
   };
 }
 
-// ── Flutterwave ────────────────────────────────────────────────────────────────
-export async function createFlutterwaveCheckout(p: CheckoutParams): Promise<CheckoutResult> {
-  const flw = getFlw();
+// ── Jjuma Global Pay ───────────────────────────────────────────────────────────
+// Jjuma uses a hosted checkout: we POST to their API to get a payment link,
+// then redirect the customer to pay.jjuma.com. On completion they POST a
+// webhook to /checkout/jjuma/webhook and also redirect to our callback URL.
+const JJUMA_API_BASE = "https://api.jjuma.com/api";
 
+export async function createJjumaCheckout(p: CheckoutParams): Promise<CheckoutResult> {
   const txRef = `cb-${p.orderId}-${Date.now()}`;
 
   const payload = {
-    tx_ref: txRef,
     amount: p.amountUsd,
     currency: "USD",
-    redirect_url: `${config.APP_URL}/api/checkout/flutterwave/callback`,
-    customer: { email: p.userEmail },
-    meta: { orderId: p.orderId, userId: p.userId, productId: p.productId },
-    customizations: {
-      title: "Case Breaker",
-      description: p.productTitle,
+    title: "Case Breaker",
+    description: p.productTitle,
+    redirect_url: `${config.APP_URL}/api/checkout/jjuma/callback`,
+    metadata: {
+      orderId: p.orderId,
+      userId: p.userId,
+      productId: p.productId,
+      reference: txRef,
     },
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const response = await (flw as any).Payment.initiate(payload);
+  const response = await fetch(`${JJUMA_API_BASE}/payment-links`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${config.JJUMA_API_KEY}`,
+    },
+    body: JSON.stringify(payload),
+  });
 
-  if (response.status !== "success") {
-    throw new Error(`Flutterwave initiation failed: ${response.message}`);
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Jjuma payment creation failed (${response.status}): ${err}`);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data = await response.json() as any;
+
+  // Jjuma returns { data: { payment_url, reference } } or similar
+  const redirectUrl: string = data?.data?.payment_url ?? data?.payment_url ?? data?.url ?? data?.link;
+  if (!redirectUrl) {
+    throw new Error(`Jjuma: no payment URL in response: ${JSON.stringify(data)}`);
   }
 
   return {
-    redirectUrl: response.data.link,
+    redirectUrl,
     providerRef: txRef,
   };
 }
 
-export function verifyFlutterwaveWebhook(hash: string): boolean {
-  return hash === config.FLW_WEBHOOK_HASH;
+export function verifyJjumaWebhook(secret: string): boolean {
+  return secret === config.JJUMA_WEBHOOK_SECRET;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function parseFlutterwaveEvent(body: any): Promise<PaymentResult | null> {
-  if (body.event !== "charge.completed") return null;
-  if (body.data?.status !== "successful") return null;
+export function parseJjumaEvent(body: any): PaymentResult | null {
+  // Jjuma webhook payload:
+  // { event: "payment.completed", reference, amount, currency, status, metadata? }
+  const event: string = body?.event ?? "";
+  const status: string = body?.status ?? "";
 
-  const flw = getFlw();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const verification = await (flw as any).Transaction.verify({ id: body.data.id });
-  if (verification.data?.status !== "successful") return null;
+  if (event !== "payment.completed" && status !== "successful") {
+    return null;
+  }
 
-  const orderId = body.data?.meta?.orderId ?? "";
+  const txRef: string = body?.reference ?? "";
+  const orderId: string = body?.metadata?.orderId ?? "";
+  const amount: number = Number(body?.amount ?? 0);
+
+  if (!txRef) return null;
 
   return {
-    provider: "flutterwave",
+    provider: "jjuma",
     orderId,
-    providerRef: body.data.tx_ref,
+    providerRef: txRef,
     status: "completed",
-    amountUsd: body.data.amount,
+    amountUsd: amount,
   };
 }
 
 // ── Main entry point ───────────────────────────────────────────────────────────
 export async function createCheckout(p: CheckoutParams): Promise<CheckoutResult> {
   if (p.provider === "stripe") return createStripeCheckout(p);
-  return createFlutterwaveCheckout(p);
+  return createJjumaCheckout(p);
 }

@@ -5,8 +5,8 @@ import {
   createCheckout,
   verifyStripeWebhook,
   parseStripeEvent,
-  verifyFlutterwaveWebhook,
-  parseFlutterwaveEvent,
+  verifyJjumaWebhook,
+  parseJjumaEvent,
   type PaymentResult,
 } from "../lib/payments.js";
 import type { ProductRow } from "../types/index.js";
@@ -14,7 +14,7 @@ import type { ProductRow } from "../types/index.js";
 // ── Schemas ────────────────────────────────────────────────────────────────────
 const initiateSchema = z.object({
   productId: z.string().uuid("Invalid product ID"),
-  provider: z.enum(["stripe", "flutterwave"]),
+  provider: z.enum(["stripe", "jjuma"]),
 });
 
 // ── Order fulfillment (shared by both webhook handlers) ────────────────────────
@@ -166,38 +166,38 @@ const checkoutRoutes: FastifyPluginAsync = async (fastify) => {
     }
   );
 
-  // ── POST /checkout/flutterwave/webhook ────────────────────────────────────────
-  fastify.post("/flutterwave/webhook", { schema: { tags: ["checkout"], summary: "Flutterwave checkout webhook (internal)" } }, async (request, reply) => {
-    const hash = request.headers["verif-hash"];
-    if (!hash || typeof hash !== "string" || !verifyFlutterwaveWebhook(hash)) {
+  // ── POST /checkout/jjuma/webhook ──────────────────────────────────────────────
+  fastify.post("/jjuma/webhook", { schema: { tags: ["checkout"], summary: "Jjuma Global Pay webhook (internal)" } }, async (request, reply) => {
+    // Jjuma sends a secret header for webhook verification
+    const secret = request.headers["x-jjuma-secret"] ?? request.headers["x-webhook-secret"];
+    if (!secret || typeof secret !== "string" || !verifyJjumaWebhook(secret)) {
+      fastify.log.warn("jjuma webhook: invalid or missing secret header");
       return reply.code(401).send({ error: "Unauthorised" });
     }
 
     try {
-      const result = await parseFlutterwaveEvent(request.body);
+      const result = parseJjumaEvent(request.body);
       if (result) {
         await fulfillOrder(result, (msg, e) => fastify.log.error(e ?? {}, msg));
       }
     } catch (err) {
-      fastify.log.error(err, "flutterwave webhook: processing error");
+      fastify.log.error(err, "jjuma webhook: processing error");
     }
 
     return reply.code(200).send({ received: true });
   });
 
-  // ── GET /checkout/flutterwave/callback ────────────────────────────────────────
-  // Flutterwave redirect-back URL after payment. Verify transaction then redirect.
-  fastify.get<{ Querystring: { transaction_id?: string; tx_ref?: string; status?: string } }>(
-    "/flutterwave/callback",
-    { schema: { tags: ["checkout"], summary: "Flutterwave redirect-back callback" } },
+  // ── GET /checkout/jjuma/callback ──────────────────────────────────────────────
+  // Jjuma redirect-back URL after payment attempt.
+  fastify.get<{ Querystring: { reference?: string; status?: string } }>(
+    "/jjuma/callback",
+    { schema: { tags: ["checkout"], summary: "Jjuma redirect-back callback" } },
     async (request, reply) => {
-      const { status, transaction_id } = request.query;
-
-      if (status !== "successful" || !transaction_id) {
+      const { status } = request.query;
+      if (status !== "successful" && status !== "success" && status !== "completed") {
         return reply.redirect(`${process.env.APP_URL}/shop?payment=cancelled`);
       }
-
-      // The webhook will handle fulfillment; redirect to dashboard optimistically.
+      // Webhook handles fulfillment; redirect to dashboard optimistically.
       return reply.redirect(`${process.env.APP_URL}/dashboard?payment=success`);
     }
   );
