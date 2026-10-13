@@ -1,0 +1,12 @@
+# Railway build config (nixpacks) — monorepo root
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+
+[phases.install]
+cmds = ["npm install"]
+
+[phases.build]
+cmds = ["npm run build --workspace=backend"]
+
+[start]
+cmd = "node backend/dist/app.js"
