@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd frontend && npm install && ./node_modules/.bin/vite build",
+  "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "installCommand": "echo skip",
   "framework": "vite",
