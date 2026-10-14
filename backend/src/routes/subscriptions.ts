@@ -1,12 +1,10 @@
 import type { FastifyPluginAsync } from "fastify";
 import { supabase } from "../db/client.js";
-import {
-  createSubscriptionCheckout,
-  cancelSubscriptionAtPeriodEnd,
-  verifySubscriptionWebhook,
-  parseSubscriptionEvent,
-} from "../lib/subscriptions.js";
+import { createJjumaCheckout, verifyJjumaWebhook } from "../lib/payments.js";
+import { config } from "../config.js";
 import type { SubscriptionRow, Subscription } from "../types/index.js";
+
+const PRO_PRICE_USD = 9;
 
 // ── Helper ─────────────────────────────────────────────────────────────────────
 function toSubscription(row: SubscriptionRow): Subscription {
@@ -71,11 +69,45 @@ const subscriptionRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(409).send({ error: "Already subscribed" });
       }
 
+      // Create a pending subscription record
+      const periodStart = new Date();
+      const periodEnd = new Date(periodStart);
+      periodEnd.setDate(periodEnd.getDate() + 30);
+
+      const { data: sub, error: subErr } = await supabase
+        .from("subscriptions")
+        .insert({
+          user_id: userId,
+          tier: "pro",
+          status: "pending",
+          current_period_start: periodStart.toISOString(),
+          current_period_end: periodEnd.toISOString(),
+          cancel_at_period_end: false,
+        })
+        .select("id")
+        .single();
+
+      if (subErr || !sub) {
+        fastify.log.error(subErr, "subscriptions: failed to create pending row");
+        return reply.code(500).send({ error: "Could not create subscription" });
+      }
+
       try {
-        const result = await createSubscriptionCheckout({ userId, email: userEmail });
+        const result = await createJjumaCheckout({
+          provider: "jjuma",
+          productId: "pro-monthly",
+          productTitle: "Case Breaker Pro — 1 month",
+          amountUsd: PRO_PRICE_USD,
+          userId,
+          userEmail,
+          orderId: sub.id,            // reuse subscription ID as orderId for webhook lookup
+        });
+        // Store provider ref
+        await supabase.from("subscriptions").update({ stripe_subscription_id: result.providerRef }).eq("id", sub.id);
         return reply.code(200).send({ redirectUrl: result.redirectUrl });
       } catch (err) {
         fastify.log.error(err, "subscriptions: checkout creation failed");
+        await supabase.from("subscriptions").delete().eq("id", sub.id);
         return reply.code(502).send({ error: "Payment provider unavailable" });
       }
     }

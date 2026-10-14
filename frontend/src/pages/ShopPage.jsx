@@ -217,7 +217,7 @@ function BuyButton({ product, owned, onSuccess }) {
   const ref = useReferral();
   const { track } = useAnalytics();
   const [busy, setBusy] = useState(false);
-  const [provider] = useState("stripe"); // default; could offer choice
+  const [provider] = useState("jjuma"); // Jjuma Global Pay — live provider
 
   if (owned) return <button style={s.ownedBtn}>✓ Owned</button>;
 
