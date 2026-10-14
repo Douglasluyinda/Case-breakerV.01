@@ -24,13 +24,14 @@ const loginSchema = z.object({
 function toUserProfile(
   id: string,
   email: string,
-  profile: { display_name: string | null; avatar_url: string | null; created_at: string } | null
+  profile: { display_name: string | null; avatar_url: string | null; created_at: string; is_admin: boolean } | null
 ): UserProfile {
   return {
     id,
     email,
     displayName: profile?.display_name ?? null,
     avatarUrl: profile?.avatar_url ?? null,
+    isAdmin: profile?.is_admin ?? false,
     createdAt: profile?.created_at ?? new Date().toISOString(),
   };
 }
@@ -79,7 +80,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("display_name, avatar_url, created_at")
+      .select("display_name, avatar_url, created_at, is_admin")
       .eq("id", data.user.id)
       .single();
 
@@ -111,7 +112,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("display_name, avatar_url, created_at")
+      .select("display_name, avatar_url, created_at, is_admin")
       .eq("id", data.user.id)
       .single();
 
@@ -151,7 +152,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
       const { data: profile, error } = await supabase
         .from("profiles")
-        .select("display_name, avatar_url, created_at")
+        .select("display_name, avatar_url, created_at, is_admin")
         .eq("id", userId)
         .single();
 

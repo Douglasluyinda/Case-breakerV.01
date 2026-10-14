@@ -9,7 +9,7 @@ exception when duplicate_object then null; end $$;
 
 do $$ begin
   create type public.subscription_status as enum (
-    'trialing', 'active', 'past_due', 'cancelled', 'unpaid', 'incomplete'
+    'pending', 'trialing', 'active', 'past_due', 'cancelled', 'unpaid', 'incomplete'
   );
 exception when duplicate_object then null; end $$;
 
