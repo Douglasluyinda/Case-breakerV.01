@@ -196,7 +196,7 @@ export default function DashboardPage() {
         <span style={s.navLogo}>Case Breaker</span>
         <div style={s.navRight}>
           <span style={s.userName}>{user?.email}</span>
-          <Link to="/" style={s.playBtn}>▶ Play</Link>
+          <Link to="/play" style={s.playBtn}>▶ Play</Link>
           <button style={s.navBtn} onClick={logout}>Sign out</button>
         </div>
       </nav>

@@ -330,7 +330,7 @@ export default function ShopPage() {
           want to stop guessing and start knowing.
         </p>
         <div style={s.heroActions}>
-          <Link to="/" style={s.heroPrimary}>▶ Play free</Link>
+          <Link to="/play" style={s.heroPrimary}>▶ Play free</Link>
           <Link to="/pro" style={s.heroSecondary}>Go Pro for $9/mo</Link>
         </div>
       </section>
