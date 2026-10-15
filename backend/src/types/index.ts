@@ -16,6 +16,7 @@ export interface UserProfile {
   email: string;
   displayName: string | null;
   avatarUrl: string | null;
+  isAdmin: boolean;
   createdAt: string;
 }
 
