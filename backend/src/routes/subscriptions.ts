@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { supabase } from "../db/client.js";
-import { createJjumaCheckout, verifyJjumaWebhook } from "../lib/payments.js";
+import { createJjumaCheckout, verifyJjumaWebhook, parseJjumaEvent } from "../lib/payments.js";
 import { config } from "../config.js";
 import type { SubscriptionRow, Subscription } from "../types/index.js";
 
@@ -136,65 +136,52 @@ const subscriptionRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(422).send({ error: "Subscription has no provider reference" });
       }
 
-      try {
-        await cancelSubscriptionAtPeriodEnd(row.stripe_subscription_id);
-        return reply.code(200).send({ cancelled: true });
-      } catch (err) {
-        fastify.log.error(err, "subscriptions: cancel failed");
-        return reply.code(502).send({ error: "Payment provider unavailable" });
+      // Mark cancel_at_period_end in DB — Jjuma subscriptions expire naturally at period end
+      const { error: updateErr } = await supabase
+        .from("subscriptions")
+        .update({ cancel_at_period_end: true })
+        .eq("id", row.id);
+
+      if (updateErr) {
+        fastify.log.error(updateErr, "subscriptions: cancel update failed");
+        return reply.code(500).send({ error: "Could not cancel subscription" });
       }
+      return reply.code(200).send({ cancelled: true });
     }
   );
 
-  // ── POST /subscriptions/stripe/webhook ───────────────────────────────────────
+  // ── POST /subscriptions/jjuma/webhook ───────────────────────────────────────
+  // Jjuma calls this when a subscription payment succeeds or fails.
   fastify.post(
-    "/stripe/webhook",
-    { config: { rawBody: true }, schema: { tags: ["subscriptions"], summary: "Stripe subscription webhook (internal)" } },
+    "/jjuma/webhook",
+    { schema: { tags: ["subscriptions"], summary: "Jjuma subscription webhook (internal)" } },
     async (request, reply) => {
-      const sig = request.headers["stripe-signature"];
-      if (!sig || typeof sig !== "string") {
-        return reply.code(400).send({ error: "Missing stripe-signature" });
+      const secret = request.headers["x-jjuma-secret"];
+      if (!secret || typeof secret !== "string") {
+        return reply.code(400).send({ error: "Missing x-jjuma-secret" });
       }
 
-      let event;
-      try {
-        const rawBody = (request as unknown as { rawBody: Buffer }).rawBody;
-        event = verifySubscriptionWebhook(rawBody, sig);
-      } catch (err) {
-        fastify.log.warn(err, "subscription webhook: signature verification failed");
+      if (!verifyJjumaWebhook(secret)) {
+        fastify.log.warn("subscription webhook: invalid Jjuma secret");
         return reply.code(400).send({ error: "Invalid signature" });
       }
 
-      const parsed = parseSubscriptionEvent(event);
-      if (!parsed || !parsed.userId) {
+      const parsed = parseJjumaEvent(request.body);
+      if (!parsed || !parsed.orderId) {
         return reply.code(200).send({ received: true });
       }
 
-      // Upsert the subscription row keyed by stripe_subscription_id
-      const { error: upsertError } = await supabase
+      // orderId on a subscription checkout is the subscription row id
+      const { error: updateErr } = await supabase
         .from("subscriptions")
-        .upsert(
-          {
-            user_id: parsed.userId,
-            tier: "pro",
-            status: parsed.kind === "deleted" ? "cancelled" : parsed.status,
-            stripe_customer_id: parsed.stripeCustomerId,
-            stripe_subscription_id: parsed.stripeSubscriptionId,
-            current_period_start: parsed.currentPeriodStart
-              ? new Date(parsed.currentPeriodStart * 1000).toISOString()
-              : null,
-            current_period_end: parsed.currentPeriodEnd
-              ? new Date(parsed.currentPeriodEnd * 1000).toISOString()
-              : null,
-            cancel_at_period_end: parsed.cancelAtPeriodEnd,
-            cancelled_at:
-              parsed.kind === "deleted" ? new Date().toISOString() : null,
-          },
-          { onConflict: "stripe_subscription_id" }
-        );
+        .update({
+          status: parsed.status === "completed" ? "active" : "past_due",
+          provider_ref: parsed.providerRef ?? null,
+        })
+        .eq("id", parsed.orderId);
 
-      if (upsertError) {
-        fastify.log.error(upsertError, "subscription webhook: db upsert failed");
+      if (updateErr) {
+        fastify.log.error(updateErr, "subscription webhook: db update failed");
       }
 
       return reply.code(200).send({ received: true });
