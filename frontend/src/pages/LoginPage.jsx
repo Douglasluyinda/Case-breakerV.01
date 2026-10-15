@@ -79,7 +79,14 @@ export default function LoginPage() {
       await login(email, password);
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err.message ?? "Login failed. Check your credentials.");
+      const msg = err.message ?? "";
+      if (msg === "Failed to fetch" || msg.includes("NetworkError") || msg.includes("network")) {
+        setError("Could not reach the server. Please try again in a moment.");
+      } else if (err.status === 401 || msg.toLowerCase().includes("invalid")) {
+        setError("Incorrect email or password.");
+      } else {
+        setError(msg || "Sign-in failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

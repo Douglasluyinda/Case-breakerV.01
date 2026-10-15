@@ -27,7 +27,8 @@ createRoot(document.getElementById("root")).render(
       <AuthProvider>
         <Routes>
           {/* Public */}
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<Navigate to="/shop" replace />} />
+          <Route path="/landing" element={<LandingPage />} />
           <Route path="/play" element={<CaseBreaker />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />

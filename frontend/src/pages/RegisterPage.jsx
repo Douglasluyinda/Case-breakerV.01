@@ -93,7 +93,19 @@ export default function RegisterPage() {
       }
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      setError(err.message ?? "Registration failed.");
+      const msg = err.message ?? "";
+      if (msg === "Failed to fetch" || msg.includes("NetworkError") || msg.includes("network")) {
+        setError("Could not reach the server. Please try again in a moment.");
+      } else if (err.status === 409 || msg.toLowerCase().includes("already")) {
+        setError("An account with this email already exists. Try signing in instead.");
+      } else if (err.status === 422 || msg.toLowerCase().includes("password")) {
+        setError(msg || "Password must be at least 8 characters.");
+      } else if (err.status === 400 && err.data?.details) {
+        const first = Object.values(err.data.details)[0];
+        setError(Array.isArray(first) ? first[0] : msg || "Please check your details.");
+      } else {
+        setError(msg || "Registration failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

@@ -110,6 +110,7 @@ const s = {
     display: "flex",
     flexDirection: "column",
     transition: "border-color 0.15s, box-shadow 0.15s",
+    position: "relative",
   },
   cardHover: {
     borderColor: "#4f46e5",
@@ -245,26 +246,58 @@ function BuyButton({ product, owned, onSuccess }) {
   );
 }
 
+// ── Product icon mapping ────────────────────────────────────────────────────────
+function productIcon(slug, fileType) {
+  if (slug?.includes("bundle")) return "📦";
+  if (slug?.includes("anki") || slug?.includes("flashcard")) return "🃏";
+  if (slug?.includes("cheat") || slug?.includes("poster")) return "📌";
+  if (slug?.includes("preposition")) return "🔗";
+  if (fileType === "application/zip") return "📦";
+  return "📄";
+}
+
+function fileLabel(fileType) {
+  if (fileType === "application/zip") return "ZIP + PDF";
+  if (fileType === "application/pdf") return "PDF";
+  return "PDF";
+}
+
 // ── Product card ────────────────────────────────────────────────────────────────
 function ProductCard({ product, owned }) {
   const [hovered, setHovered] = useState(false);
-  const ext = product.fileType?.split("/")[1]?.toUpperCase() ?? product.fileType ?? "PDF";
+  const isBundle = product.slug?.includes("bundle");
+  const icon = productIcon(product.slug, product.fileType);
+  const label = fileLabel(product.fileType);
 
   return (
     <div
-      style={{ ...s.card, ...(hovered ? s.cardHover : {}) }}
+      style={{
+        ...s.card,
+        ...(hovered ? s.cardHover : {}),
+        ...(isBundle ? { border: "1px solid #4f46e5", background: "linear-gradient(160deg, #1e1b4b, #1e293b)" } : {}),
+      }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <span style={s.fileTag}>{ext}</span>
-      <div style={s.cardTitle}>{product.title}</div>
+      {isBundle && (
+        <div style={{ position: "absolute", top: -12, right: 16, background: "linear-gradient(135deg, #7c3aed, #2563eb)", borderRadius: 999, padding: "0.2rem 0.75rem", fontSize: "0.7rem", fontWeight: 800, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+          Best Value
+        </div>
+      )}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem", marginBottom: "0.75rem" }}>
+        <div style={{ fontSize: "2rem", lineHeight: 1, flexShrink: 0 }}>{icon}</div>
+        <div style={{ flex: 1 }}>
+          <span style={s.fileTag}>{label}</span>
+          <div style={s.cardTitle}>{product.title}</div>
+        </div>
+      </div>
       {product.description && (
         <div style={s.cardDesc}>{product.description}</div>
       )}
       <div style={s.cardFooter}>
         <div>
           <span style={s.cardPrice}>${Number(product.priceUsd).toFixed(2)}</span>
-          <span style={s.cardPriceSub}> once</span>
+          <span style={s.cardPriceSub}> one-time</span>
         </div>
         <BuyButton product={product} owned={owned} />
       </div>
